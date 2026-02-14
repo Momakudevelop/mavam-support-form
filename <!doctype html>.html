@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MAVAM｜不具合問い合わせ & ログ</title>
+
+  <style>
+    :root{
+      --bg: #f3ede6;
+      --panel: rgba(255,255,255,.55);
+      --text: #111111;
+      --muted: rgba(17,17,17,.65);
+      --line: rgba(17,17,17,.18);
+      --line-strong: rgba(17,17,17,.28);
+      --shadow: 0 18px 60px rgba(0,0,0,.10);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: radial-gradient(1200px 600px at 10% 0%, rgba(255,255,255,.65), transparent 60%),
+                  radial-gradient(900px 500px at 100% 20%, rgba(255,255,255,.45), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      letter-spacing:.02em;
+    }
+    .wrap{max-width:980px; margin:36px auto; padding:0 18px 64px;}
+    header{margin-bottom:18px;}
+    .kicker{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.12em;}
+    h1{margin:10px 0 8px; font-size:28px; font-weight:750;}
+    .lead{margin:0; color:var(--muted); font-size:14px; line-height:1.7;}
+    .pill{
+      display:inline-block;
+      border:1px solid var(--line);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--muted);
+      background: rgba(255,255,255,.45);
+      margin-top:10px;
+    }
+
+    .tabs{
+      margin-top:18px;
+      display:flex;
+      gap:10px;
+    }
+    .tab{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.45);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight:750;
+      letter-spacing:.06em;
+      font-size:12px;
+    }
+    .tab[aria-selected="true"]{
+      background: var(--text);
+      color:#fff;
+      border-color: rgba(17,17,17,.65);
+    }
+
+    .card{
+      margin-top:14px;
+      background: var(--panel);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(8px);
+    }
+    .section{
+      padding:18px 18px 8px;
+      border-top:1px solid var(--line);
+    }
+    .section:first-child{border-top:0;}
+    .section h2{
+      margin:0 0 10px;
+      font-size:14px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .grid{display:grid; gap:12px;}
+    @media(min-width:760px){ .grid.two{grid-template-columns:1fr 1fr;} }
+
+    label{display:block; font-size:13px; font-weight:700; margin:10px 0 6px;}
+    .req::after{content:" *"; font-weight:900;}
+    .hint{margin:6px 0 0; font-size:12px; color:var(--muted); line-height:1.6;}
+
+    input, select, textarea{
+      width:100%;
+      padding:12px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.75);
+      color:var(--text);
+      font-size:14px;
+      outline: none;
+    }
+    textarea{min-height:120px; resize:vertical;}
+    input:focus, select:focus, textarea:focus{
+      border-color: var(--line-strong);
+      box-shadow: 0 0 0 3px rgba(17,17,17,.10);
+    }
+
+    .checks{
+      display:grid;
+      gap:10px;
+      grid-template-columns:1fr 1fr;
+      margin-top:8px;
+    }
+    @media(min-width:760px){ .checks{grid-template-columns:1fr 1fr 1fr;} }
+    .check{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:10px 10px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      border-radius: 14px;
+    }
+    .check input{width:auto; margin-top:3px;}
+    .check span{font-size:13px; color:var(--text); line-height:1.35;}
+
+    .footer{
+      padding:18px;
+      border-top:1px solid var(--line);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap;}
+    .btn{
+      appearance:none;
+      border:1px solid rgba(17,17,17,.65);
+      background: var(--text);
+      color: #fff;
+      padding:12px 14px;
+      border-radius: 16px;
+      font-weight:850;
+      letter-spacing:.06em;
+      cursor:pointer;
+      transition: transform .06s ease, opacity .15s ease;
+      font-size:13px;
+    }
+    .btn:hover{opacity:.92}
+    .btn:active{transform: translateY(1px);}
+    .btn.ghost{
+      background: rgba(255,255,255,.50);
+      color: var(--text);
+      border-color: var(--line);
+      font-weight:800;
+    }
+    .smallnote{font-size:12px; color:var(--muted); line-height:1.6;}
+
+    /* Log list */
+    .toolbar{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:14px 18px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.35);
+    }
+    @media(min-width:760px){
+      .toolbar{flex-direction:row; align-items:center; justify-content:space-between;}
+      .toolbar .left{display:flex; gap:10px; align-items:center;}
+      .toolbar .right{display:flex; gap:10px; align-items:center;}
+    }
+    .toolbar input, .toolbar select{
+      padding:10px 10px;
+      border-radius: 999px;
+      font-size:13px;
+    }
+    .count{font-size:12px; color:var(--muted); font-weight:750; letter-spacing:.06em;}
+    .list{padding:8px 12px 14px;}
+    .item{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      border-radius: 16px;
+      padding:12px 12px;
+      margin:10px 6px;
+    }
+    .itemhead{
+      display:flex; gap:10px; justify-content:space-between; align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .ticket{
+      font-weight:900;
+      letter-spacing:.06em;
+      font-size:12px;
+      color: var(--muted);
+      text-transform:uppercase;
+    }
+    .meta{
+      font-size:12px;
+      color: var(--muted);
+      line-height:1.55;
+      margin-top:6px;
+    }
+    .badges{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
+    .badge{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.45);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      color: var(--text);
+      font-weight:800;
+    }
+    details{margin-top:10px;}
+    summary{cursor:pointer; font-weight:850; color:var(--text); font-size:13px;}
+    .danger{border-color: rgba(0,0,0,.25); background: rgba(255,255,255,.35);}
+    .actions{display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;}
+    .link{
+      display:inline-block;
+      font-size:12px;
+      color: var(--text);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor:pointer;
+    }
+    .hidden{display:none !important;}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="kicker">MAVAM SUPPORT</div>
+      <h1>不具合問い合わせ & ログ</h1>
+      <p class="lead">
+        お客様入力をシンプルにしつつ、社内で「修理判断・メーカー転送・傾向分析」に使える形でログ化します。
+      </p>
+      <div class="pill">「正面」＝操作パネル側に立った状態</div>
+
+      <div class="tabs" role="tablist" aria-label="tabs">
+        <button class="tab" id="tab-form" role="tab" aria-selected="true" aria-controls="panel-form">問い合わせ</button>
+        <button class="tab" id="tab-log" role="tab" aria-selected="false" aria-controls="panel-log">ログ</button>
+      </div>
+    </header>
+
+    <!-- Panel: Form -->
+    <section id="panel-form" role="tabpanel" aria-labelledby="tab-form">
+      <form class="card" id="mavamTicket" enctype="multipart/form-data">
+        <!-- 店舗情報 -->
+        <div class="section">
+          <h2>店舗情報</h2>
+          <div class="grid two">
+            <div>
+              <label class="req">店舗名</label>
+              <input name="shop_name" required placeholder="例）〇〇カフェ" />
+            </div>
+            <div>
+              <label class="req">ご担当者名</label>
+              <input name="contact_name" required placeholder="例）山田 太郎" />
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div>
+              <label>電話番号</label>
+              <input name="phone" inputmode="tel" placeholder="例）090-1234-5678" />
+              <div class="hint">どちらか（電話 or メール）があると助かります。</div>
+            </div>
+            <div>
+              <label>メールアドレス</label>
+              <input name="email" type="email" placeholder="例）xxx@example.com" />
+            </div>
+          </div>
+
+          <label class="req">緊急度</label>
+          <select name="urgency" required>
+            <option value="">選択してください</option>
+            <option value="stop">営業できない（至急）</option>
+            <option value="impact">営業はできるが困っている（早め）</option>
+            <option value="minor">軽微（時間あるとき）</option>
+          </select>
+        </div>
+
+        <!-- マシン位置 -->
+        <div class="section">
+          <h2>どのあたりの不具合ですか</h2>
+          <label class="req">不具合の位置（正面基準）</label>
+          <select name="side" required>
+            <option value="">選択してください</option>
+            <option value="right">右（正面に立って右）</option>
+            <option value="left">左（正面に立って左）</option>
+            <option value="center">中央</option>
+            <option value="whole">全体</option>
+            <option value="unknown">わからない（写真/動画を添付してください）</option>
+          </select>
+        </div>
+
+        <!-- 症状 -->
+        <div class="section">
+          <h2>症状</h2>
+
+          <label class="req">症状カテゴリ（複数選択OK）</label>
+          <div class="checks" role="group" aria-label="symptom categories">
+            <label class="check"><input type="checkbox" name="category" value="抽出：出ない"><span>抽出：出ない</span></label>
+            <label class="check"><input type="checkbox" name="category" value="抽出：薄い/弱い"><span>抽出：薄い / 弱い</span></label>
+            <label class="check"><input type="checkbox" name="category" value="抽出：止まらない"><span>抽出：止まらない</span></label>
+
+            <label class="check"><input type="checkbox" name="category" value="お湯：出ない"><span>お湯：出ない</span></label>
+            <label class="check"><input type="checkbox" name="category" value="お湯：温度がおかしい"><span>お湯：温度がおかしい</span></label>
+
+            <label class="check"><input type="checkbox" name="category" value="水回り：漏れ"><span>水回り：漏れ</span></label>
+            <label class="check"><input type="checkbox" name="category" value="水回り：異音"><span>水回り：異音</span></label>
+
+            <label class="check"><input type="checkbox" name="category" value="エラー表示"><span>画面にエラーが出る</span></label>
+            <label class="check"><input type="checkbox" name="category" value="電源：入らない/落ちる"><span>電源：入らない / 落ちる</span></label>
+
+            <label class="check"><input type="checkbox" name="category" value="その他"><span>その他</span></label>
+          </div>
+
+          <div class="grid two">
+            <div>
+              <label>エラーコード（表示がある場合）</label>
+              <input name="error_code" placeholder="例）E-01（表示どおり）" />
+              <div class="hint">わからなければ空欄でOK。画面の写真があると助かります。</div>
+            </div>
+            <div>
+              <label class="req">発生頻度</label>
+              <select name="frequency" required>
+                <option value="">選択してください</option>
+                <option value="毎回">毎回</option>
+                <option value="たまに">たまに</option>
+                <option value="特定のときだけ">特定のときだけ</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="req">症状の詳細（自由記述）</label>
+          <textarea name="symptom_detail" required
+            placeholder="例）抽出ボタンを押しても反応がない／水が少し漏れる／いつもと違う音がする、など。できれば「何をしたときに」「何が起きたか」を書いてください。"></textarea>
+
+          <label>発生頻度の補足（自由記述）</label>
+          <textarea name="frequency_note"
+            placeholder="例）朝イチだけ／忙しい時間帯だけ／1日1回くらい、など"></textarea>
+        </div>
+
+        <!-- 時系列 -->
+        <div class="section">
+          <h2>いつから / きっかけ</h2>
+          <label class="req">いつ気づきましたか</label>
+          <input name="noticed_at" type="datetime-local" required />
+
+          <label class="req">症状が出る前までは通常に使えていましたか</label>
+          <select name="was_normal" required>
+            <option value="">選択してください</option>
+            <option value="はい（普通に使えていた）">はい（普通に使えていた）</option>
+            <option value="いいえ（以前から兆候があった）">いいえ（以前から兆候があった）</option>
+          </select>
+
+          <label>症状の前に、いつもと違う操作をした記憶はありますか（自由記述）</label>
+          <textarea name="unusual_action"
+            placeholder="例）いつもと違う洗浄をした／何か外した／動かした／停電があった気がする、など。思い出せる範囲でOK"></textarea>
+        </div>
+
+        <!-- 添付（この版ではファイル自体は保存せず、ファイル名だけログに残します） -->
+        <div class="section">
+          <h2>写真 / 動画</h2>
+          <label>添付（写真・動画）</label>
+          <input name="attachments" type="file" multiple accept="image/*,video/*" />
+          <div class="hint">
+            おすすめ：①全体が分かる写真 ②該当箇所アップ ③エラー表示 ④動作動画（15〜30秒）<br>
+            ※この「ページ内ログ」方式では、添付ファイルそのものは保存されず、<strong>ファイル名のみ</strong>記録します（サーバー保存にすると解決できます）。
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="btnrow">
+            <button class="btn" type="submit">送信してログに追加</button>
+            <button class="btn ghost" type="button" id="btnGoLog">ログを見る</button>
+          </div>
+          <div class="smallnote">
+            送信内容は、修理判断・メーカー一次共有・不具合傾向の分析（ログ蓄積）のために利用します。
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Panel: Log -->
+    <section id="panel-log" class="hidden" role="tabpanel" aria-labelledby="tab-log">
+      <div class="card">
+        <div class="toolbar">
+          <div class="left">
+            <div class="count" id="logCount">0件</div>
+            <input id="q" placeholder="検索（店舗名 / 症状 / エラーコード など）" />
+            <select id="fUrgency" title="緊急度で絞り込み">
+              <option value="">緊急度：すべて</option>
+              <option value="stop">営業できない（至急）</option>
+              <option value="impact">営業はできるが困っている（早め）</option>
+              <option value="minor">軽微（時間あるとき）</option>
+            </select>
+          </div>
+          <div class="right">
+            <button class="btn ghost" id="btnExportCsv" type="button">CSV出力</button>
+            <button class="btn ghost" id="btnClearAll" type="button">全件削除</button>
+          </div>
+        </div>
+
+        <div class="list" id="logList"></div>
+
+        <div class="footer">
+          <div class="btnrow">
+            <button class="btn ghost" id="btnBackForm" type="button">問い合わせに戻る</button>
+          </div>
+          <div class="smallnote">
+            ※ログはこのブラウザに保存されます（localStorage）。共有・バックアップが必要なら、CSV出力 or サーバー保存に切替できます。
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ---- Storage ----
+    const STORAGE_KEY = "mavam_tickets_v1";
+
+    function loadTickets(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){
+        console.warn("Failed to load tickets", e);
+        return [];
+      }
+    }
+    function saveTickets(tickets){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+    }
+
+    // ---- Tabs ----
+    const tabForm = document.getElementById("tab-form");
+    const tabLog  = document.getElementById("tab-log");
+    const panelForm = document.getElementById("panel-form");
+    const panelLog  = document.getElementById("panel-log");
+
+    function showTab(which){
+      const isForm = which === "form";
+      tabForm.setAttribute("aria-selected", String(isForm));
+      tabLog.setAttribute("aria-selected", String(!isForm));
+      panelForm.classList.toggle("hidden", !isForm);
+      panelLog.classList.toggle("hidden", isForm);
+      if(!isForm) renderLog();
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+    tabForm.addEventListener("click", () => showTab("form"));
+    tabLog.addEventListener("click", () => showTab("log"));
+
+    document.getElementById("btnGoLog").addEventListener("click", () => showTab("log"));
+    document.getElementById("btnBackForm").addEventListener("click", () => showTab("form"));
+
+    // ---- Form submit -> Log ----
+    const form = document.getElementById("mavamTicket");
+
+    function getCheckedValues(name){
+      return Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(x => x.value);
+    }
+
+    function humanTicketId(now=new Date()){
+      const pad = (n)=> String(n).padStart(2,"0");
+      const y = now.getFullYear();
+      const m = pad(now.getMonth()+1);
+      const d = pad(now.getDate());
+      const hh = pad(now.getHours());
+      const mm = pad(now.getMinutes());
+      const rand = Math.random().toString(16).slice(2,6).toUpperCase();
+      return `MV-${y}${m}${d}-${hh}${mm}-${rand}`;
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      // 必須チェック：カテゴリは最低1つ欲しい（UIで強制してないのでここで）
+      const cats = getCheckedValues("category");
+      if(cats.length === 0){
+        alert("「症状カテゴリ」を1つ以上選択してください。");
+        return;
+      }
+
+      const fd = new FormData(form);
+
+      const files = fd.getAll("attachments").filter(f => f && typeof f.name === "string").map(f => ({
+        name: f.name,
+        type: f.type || "",
+        size: f.size || 0
+      }));
+
+      const ticket = {
+        id: humanTicketId(new Date()),
+        created_at: new Date().toISOString(),
+
+        shop_name: (fd.get("shop_name") || "").toString().trim(),
+        contact_name: (fd.get("contact_name") || "").toString().trim(),
+        phone: (fd.get("phone") || "").toString().trim(),
+        email: (fd.get("email") || "").toString().trim(),
+        urgency: (fd.get("urgency") || "").toString(),
+
+        side: (fd.get("side") || "").toString(),
+
+        categories: cats,
+        error_code: (fd.get("error_code") || "").toString().trim(),
+        frequency: (fd.get("frequency") || "").toString(),
+        symptom_detail: (fd.get("symptom_detail") || "").toString().trim(),
+        frequency_note: (fd.get("frequency_note") || "").toString().trim(),
+
+        noticed_at: (fd.get("noticed_at") || "").toString(),
+        was_normal: (fd.get("was_normal") || "").toString(),
+        unusual_action: (fd.get("unusual_action") || "").toString().trim(),
+
+        attachments: files
+      };
+
+      const tickets = loadTickets();
+      tickets.unshift(ticket); // 新しいものを上に
+      saveTickets(tickets);
+
+      form.reset();
+      // checkbox resetはresetで戻るけど念のため
+      form.querySelectorAll('input[type="checkbox"][name="category"]').forEach(c => c.checked = false);
+
+      showTab("log");
+    });
+
+    // ---- Log rendering ----
+    const logList = document.getElementById("logList");
+    const logCount = document.getElementById("logCount");
+    const q = document.getElementById("q");
+    const fUrgency = document.getElementById("fUrgency");
+
+    function urgencyLabel(val){
+      if(val==="stop") return "営業できない（至急）";
+      if(val==="impact") return "営業はできるが困っている（早め）";
+      if(val==="minor") return "軽微（時間あるとき）";
+      return val || "—";
+    }
+
+    function sideLabel(val){
+      const map = {
+        right:"右", left:"左", center:"中央", whole:"全体", unknown:"わからない"
+      };
+      return map[val] || val || "—";
+    }
+
+    function fmtJST(iso){
+      try{
+        const d = new Date(iso);
+        const pad = n => String(n).padStart(2,"0");
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }catch{
+        return iso;
+      }
+    }
+
+    function matches(ticket, queryText, urgencyFilter){
+      const ql = (queryText||"").trim().toLowerCase();
+      if(urgencyFilter && ticket.urgency !== urgencyFilter) return false;
+      if(!ql) return true;
+
+      const hay = [
+        ticket.id,
+        ticket.shop_name,
+        ticket.contact_name,
+        ticket.phone,
+        ticket.email,
+        ticket.side,
+        (ticket.categories||[]).join(" "),
+        ticket.error_code,
+        ticket.frequency,
+        ticket.symptom_detail,
+        ticket.frequency_note,
+        ticket.noticed_at,
+        ticket.was_normal,
+        ticket.unusual_action,
+        (ticket.attachments||[]).map(a=>a.name).join(" ")
+      ].join(" ").toLowerCase();
+
+      return hay.includes(ql);
+    }
+
+    function renderLog(){
+      const tickets = loadTickets();
+      const queryText = q.value;
+      const urgencyFilter = fUrgency.value;
+
+      const filtered = tickets.filter(t => matches(t, queryText, urgencyFilter));
+      logCount.textContent = `${filtered.length}件（全${tickets.length}件）`;
+
+      logList.innerHTML = "";
+      if(filtered.length === 0){
+        logList.innerHTML = `<div class="item danger"><div class="meta">該当するログがありません。</div></div>`;
+        return;
+      }
+
+      for(const t of filtered){
+        const cats = (t.categories||[]).map(c => `<span class="badge">${escapeHtml(c)}</span>`).join("");
+        const attachCount = (t.attachments||[]).length;
+        const attachNames = (t.attachments||[]).map(a => `${a.name} (${Math.round((a.size||0)/1024)}KB)`).join("\n");
+
+        const el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML = `
+          <div class="itemhead">
+            <div>
+              <div class="ticket">${escapeHtml(t.id)}</div>
+              <div class="meta">
+                <div><strong>店舗：</strong>${escapeHtml(t.shop_name||"—")} ／ <strong>担当：</strong>${escapeHtml(t.contact_name||"—")}</div>
+                <div><strong>緊急度：</strong>${escapeHtml(urgencyLabel(t.urgency))} ／ <strong>位置：</strong>${escapeHtml(sideLabel(t.side))}</div>
+                <div><strong>気づいた日時：</strong>${escapeHtml(t.noticed_at||"—")} ／ <strong>登録：</strong>${escapeHtml(fmtJST(t.created_at))}</div>
+                <div><strong>エラー：</strong>${escapeHtml(t.error_code||"—")} ／ <strong>頻度：</strong>${escapeHtml(t.frequency||"—")}</div>
+                <div><strong>連絡先：</strong>${escapeHtml(t.phone||"")} ${t.phone && t.email ? " / " : ""}${escapeHtml(t.email||"")}</div>
+                <div><strong>添付：</strong>${attachCount ? `${attachCount}件（ファイル名のみ記録）` : "なし"}</div>
+              </div>
+              <div class="badges">${cats}</div>
+            </div>
+            <div class="actions">
+              <button class="btn ghost" type="button" data-act="copy" data-id="${escapeAttr(t.id)}">内容コピー</button>
+              <button class="btn ghost" type="button" data-act="delete" data-id="${escapeAttr(t.id)}">削除</button>
+            </div>
+          </div>
+
+          <details>
+            <summary>詳細を見る</summary>
+            <div class="meta">
+              <div><strong>症状詳細：</strong><br>${nl2br(escapeHtml(t.symptom_detail||"—"))}</div>
+              ${t.frequency_note ? `<div style="margin-top:8px;"><strong>頻度補足：</strong><br>${nl2br(escapeHtml(t.frequency_note))}</div>` : ""}
+              <div style="margin-top:8px;"><strong>通常に使えていた？：</strong>${escapeHtml(t.was_normal||"—")}</div>
+              ${t.unusual_action ? `<div style="margin-top:8px;"><strong>いつもと違う操作：</strong><br>${nl2br(escapeHtml(t.unusual_action))}</div>` : ""}
+              ${attachCount ? `<div style="margin-top:8px;"><strong>添付ファイル名：</strong><pre style="white-space:pre-wrap; margin:6px 0 0;">${escapeHtml(attachNames)}</pre></div>` : ""}
+            </div>
+          </details>
+        `;
+        logList.appendChild(el);
+      }
+
+      // bind actions
+      logList.querySelectorAll("button[data-act]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const act = btn.getAttribute("data-act");
+          const id = btn.getAttribute("data-id");
+          if(act==="delete") deleteTicket(id);
+          if(act==="copy") copyTicket(id);
+        });
+      });
+    }
+
+    function deleteTicket(id){
+      const tickets = loadTickets();
+      const next = tickets.filter(t => t.id !== id);
+      saveTickets(next);
+      renderLog();
+    }
+
+    async function copyTicket(id){
+      const tickets = loadTickets();
+      const t = tickets.find(x => x.id === id);
+      if(!t) return;
+
+      const text = [
+        `受付ID: ${t.id}`,
+        `店舗名: ${t.shop_name}`,
+        `担当: ${t.contact_name}`,
+        `連絡先: ${[t.phone,t.email].filter(Boolean).join(" / ")}`,
+        `緊急度: ${urgencyLabel(t.urgency)}`,
+        `位置(正面基準): ${sideLabel(t.side)}`,
+        `カテゴリ: ${(t.categories||[]).join(" / ")}`,
+        `エラーコード: ${t.error_code || "—"}`,
+        `頻度: ${t.frequency || "—"}`,
+        `気づいた日時: ${t.noticed_at || "—"}`,
+        `通常に使えていた？: ${t.was_normal || "—"}`,
+        `症状詳細:\n${t.symptom_detail || ""}`,
+        t.frequency_note ? `頻度補足:\n${t.frequency_note}` : "",
+        t.unusual_action ? `いつもと違う操作:\n${t.unusual_action}` : "",
+        (t.attachments||[]).length ? `添付(ファイル名):\n${t.attachments.map(a=>a.name).join("\n")}` : ""
+      ].filter(Boolean).join("\n");
+
+      try{
+        await navigator.clipboard.writeText(text);
+        alert("コピーしました。メーカー転送や社内共有に貼り付けできます。");
+      }catch{
+        // fallback
+        prompt("コピーできなかったので、ここから手動でコピーしてください。", text);
+      }
+    }
+
+    // ---- Export CSV ----
+    document.getElementById("btnExportCsv").addEventListener("click", ()=>{
+      const tickets = loadTickets();
+      const rows = tickets.map(t => ({
+        id: t.id,
+        created_at: t.created_at,
+        shop_name: t.shop_name,
+        contact_name: t.contact_name,
+        phone: t.phone,
+        email: t.email,
+        urgency: urgencyLabel(t.urgency),
+        side: sideLabel(t.side),
+        categories: (t.categories||[]).join(" | "),
+        error_code: t.error_code,
+        frequency: t.frequency,
+        symptom_detail: t.symptom_detail,
+        frequency_note: t.frequency_note,
+        noticed_at: t.noticed_at,
+        was_normal: t.was_normal,
+        unusual_action: t.unusual_action,
+        attachments: (t.attachments||[]).map(a=>a.name).join(" | ")
+      }));
+
+      const header = Object.keys(rows[0] || {
+        id:"",created_at:"",shop_name:"",contact_name:"",phone:"",email:"",
+        urgency:"",side:"",categories:"",error_code:"",frequency:"",
+        symptom_detail:"",frequency_note:"",noticed_at:"",was_normal:"",
+        unusual_action:"",attachments:""
+      });
+
+      const csv = [
+        header.join(","),
+        ...rows.map(r => header.map(k => csvEscape((r[k] ?? "").toString())).join(","))
+      ].join("\n");
+
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `mavam_logs_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("btnClearAll").addEventListener("click", ()=>{
+      if(!confirm("ログを全件削除します。本当にいいですか？")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      renderLog();
+    });
+
+    q.addEventListener("input", renderLog);
+    fUrgency.addEventListener("change", renderLog);
+
+    // ---- helpers ----
+    function csvEscape(s){
+      const needs = /[",\n]/.test(s);
+      const escaped = s.replace(/"/g,'""');
+      return needs ? `"${escaped}"` : escaped;
+    }
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
+    }
+    function escapeAttr(s){
+      return escapeHtml(s).replace(/"/g, "&quot;");
+    }
+    function nl2br(s){
+      return s.replace(/\n/g, "<br>");
+    }
+
+    // ---- init ----
+    (function init(){
+      // noticed_at を初期値：今（ローカル）
+      const noticed = form.querySelector('input[name="noticed_at"]');
+      if(noticed){
+        const now = new Date();
+        const pad = n => String(n).padStart(2,"0");
+        const v = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        noticed.value = v;
+      }
+      renderLog();
+    })();
+  </script>
+</body>
+</html>
